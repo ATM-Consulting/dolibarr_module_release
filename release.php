@@ -5,6 +5,7 @@
 	dol_include_once('/societe/class/societe.class.php');
 	
 	$id = GETPOST('id');
+	$id_release = GETPOST('id_release');
 	
 	$propal = new Propal($db);
 	$propal->fetch($id);
@@ -13,13 +14,20 @@
 	
 	$PDOdb = new TPDOdb;
 	
+	$release = new TRelease;
+	if($id_release>0) {
+		$release->load($PDOdb, $id_release);
+	}
+	
 	switch ($action) {
 		case 'add':
+			$release->save($PDOdb);
 			
 			_card($PDOdb, $propal);
 			break;
 		
 		case 'save':
+			$release->delete($PDOdb);
 			
 			_card($PDOdb, $propal);
 			break;
@@ -31,10 +39,14 @@
 		
 		case 'link':
 			
+			//TODO completer l'appel pour lier une ligne à une release
+			
 			_card($PDOdb, $propal);
 			break;
 			
 		case 'unlink':
+			//TODO completer l'appel pour délier une ligne à une release
+			
 			
 			_card($PDOdb, $propal);
 			break;
