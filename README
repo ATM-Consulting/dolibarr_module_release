@@ -17,7 +17,7 @@
  */
 
 Besoins énoncés par le client :
-- Pouvoir, sur une fiche proposition, créer des points de release avec une date
+- Pouvoir, sur une fiche proposition, créer des points de release avec un libellé (label) et une date (date_release)
 - Associer à cette release des lignes de proposition
 - Contrôler que toutes les lignes sont associées à une release (facultatif)
 - Pourvoir créer une facture sur une release qui reprend le contenu de la propale associée
