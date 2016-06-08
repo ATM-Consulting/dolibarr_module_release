@@ -173,7 +173,7 @@ class modRelease extends DolibarrModules
 		$this->rights = array();		// Permission array used by this module
 		$r=0;
 
-		//TODO créez deux droits, l'un permettant de lire les releases, l'autre permettant des créer et de créer les factures
+		//TODO créez deux droits, l'un permettant de lire les releases, l'autre permettant de les créer et de créer les factures
 		
 		// Add here list of permission defined by an id, a label, a boolean and two constant strings.
 		// Example:

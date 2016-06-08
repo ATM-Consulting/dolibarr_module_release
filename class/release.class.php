@@ -34,7 +34,7 @@ class TRelease extends TObjetStd {
 		$Tab = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX . 'release', array('fk_propal'=>$fk_propal));
 		$TRelease = array();
 		
-		//TODO rendre ça plus lisible... En plus je ne pense pas que ça marche
+		//TODO rendre ça plus lisible... En plus ça ne marche pas, j'ai true dans le tableau
 		foreach($Tab as $id) $TRelease[] = (new TRelease)->load($PDOdb, $id); 
 		
 		return $TRelease;
