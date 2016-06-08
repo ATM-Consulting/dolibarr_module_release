@@ -31,23 +31,53 @@
 			break;
 		
 		case 'save':
-			$release->delete($PDOdb);
+			
+			$TRelease = GETPOST('TRelease','array');
+			
+			if(!empty($TRelease)) {
+				
+				foreach($TRelease as $id_release=>$dataRelease) {
+					
+					if($release->load($PDOdb, $id_release)) {
+						
+						$release->set_values($dataRelease);
+						
+						if(!empty($dataRelease['TReleaseLineLink'])) {
+							
+							foreach($dataRelease['TReleaseLineLink'] as $k=>$dataLink) {
+								
+								$release->TReleaseLineLink[$k]->set_values($dataLink);
+								
+							}
+							
+						}
+						
+						if(!empty($dataRelease['bt_add_line_release']) && !empty($dataRelease['line_to_add'])) {
+	
+							//TODO completer l'appel pour lier une ligne à une release
+							//HELP Regarde dans la classe :-|						
+							
+						}
+						
+						if(!empty($dataRelease['bt_facture_release'])) {
+							$release->facture();
+						}
+						
+					}
+					
+				}
+				
+			}
 			
 			_card($PDOdb, $propal);
 			break;
 		
 		case 'delete':
+			$release->delete($PDOdb);
 			
 			_card($PDOdb, $propal);
 			break;
 		
-		case 'link':
-			
-			//TODO completer l'appel pour lier une ligne à une release
-			
-			_card($PDOdb, $propal);
-			break;
-			
 		case 'unlink':
 			//TODO completer l'appel pour délier une ligne à une release
 			
@@ -68,6 +98,7 @@ function _card(&$PDOdb, &$propal) {
 	_entete($propal);
 	
 	// TODO finaliser l'affichage de la liste des releases
+	// HELP, il manque quelques points
 	
 	$TRelease = TRelease::getAllReleaseForPropal($PDOdb, $propal->id);
 	
@@ -75,34 +106,38 @@ function _card(&$PDOdb, &$propal) {
 	echo $formCore->hidden('action', 'save');
 	echo $formCore->hidden('id', $propal->id);
 	
-	//TODO A internationaliser
-	?><br /><br /> 
-	<table class="border" width="100%"><tr class="liste_titre"><th>Label</th><th>Line</th><th>.</th></tr>
-	<?php
 	
 	foreach($TRelease as &$release) {
 		
+		//TODO A internationaliser
+		echo '<br /><br /> 
+		<table class="border" width="100%"><tr class="liste_titre"><th>Label</th><th>Line</th><th>.</th></tr>';
+		
 		echo '<tr>
 			<td>'.$formCore->texte('','TRelease['.$release->getId().'][label]', $release->label,40,255).'</td>
-			<td>'.$formCore->combo('','TRelease['.$release->getId().'][line_to_add]', TRelease::getAllLineCombo($propal), -1).'</a></td>
+			<td>'.$formCore->combo('','TRelease['.$release->getId().'][line_to_add]', TRelease::getAllLineCombo($propal), -1).' '.$formCore->btsubmit($langs->trans('AddLineRelease'), 'TRelease['.$release->getId().'][bt_add_line_release]').'</td>
+			<td>'.$formCore->btsubmit($langs->trans('FactureThisRelease'), 'TRelease['.$release->getId().'][bt_facture_release]').'</td>
 			<td><a href="?id='.$propal->id.'&atcion=delet">'.img_delete().'</a></td>
-		</tr>'; //TODO je crois que j'ai fait une erreur sur le lien de suppresion
-		
+		</tr>'; //TODO je crois que j'ai fait une erreur sur le lien de suppression
 		
 		foreach($release->TReleaseLineLink as &$link) {
 			
 			
 			echo '<tr>
 				<td> *** </td>
-				<td>'.$link->getLine().'</td>
+				<td>'.$link->getLineTitle().'</td>
+				<td>'.$formCore->texte('','TRelease['.$release->getId().'][TReleaseLineLink]['.$link->getId().'][qty]', $link->qty,3,10).'</td>
 			<td><a href="?id='.$propal->id.'&atcion=unlink&lineid='.$link->fk_propal_line.'">'.img_delete().'</a></td>
 			</tr>';
 		}
 		
+		//TODO afficher le total du montant de la release
+		echo '<tr><td align="right" colspan="2">'.$langs->trans('Total').'</td><td align="right">'.price($total).'</td></tr>';
+		echo '</table>';	
 	}	
 	
 	?>
-	</table>
+	
 	
 	<div class="tabsAction">
 		<div class="inline-block divButAction"><a href="?id=<?php echo $propal->id?>&action=add" class="butAction"><?php echo $langs->trans('Add') ?></a></div>
