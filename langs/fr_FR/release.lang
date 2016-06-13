@@ -5,3 +5,6 @@ ATMAbout = Ce module a été développé par <a href="http://www.atm-consulting.
 
 ReleaseSetup = Configuration du module Release
 ReleaseAbout = A propos du module Release
+
+ReadRelease=Lire les releases
+WriteRelease=Créer et facturer les releases

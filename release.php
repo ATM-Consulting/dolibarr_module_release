@@ -4,6 +4,7 @@
 	dol_include_once('/release/class/release.class.php');
 	dol_include_once('/comm/propal/class/propal.class.php');
 	dol_include_once('/societe/class/societe.class.php');
+	dol_include_once('/core/lib/propal.lib.php'); // logique non ?
 	
 	$id = GETPOST('id');
 	$id_release = GETPOST('id_release');
@@ -53,9 +54,9 @@
 						}
 						
 						if(!empty($dataRelease['bt_add_line_release']) && !empty($dataRelease['line_to_add'])) {
-	
-							//TODO completer l'appel pour lier une ligne à une release
-							//HELP Regarde dans la classe :-|						
+
+							$release->link($PDOdb, $dataRelease['line_to_add']);
+							$release->save($PDOdb);
 							
 						}
 						
@@ -79,8 +80,7 @@
 			break;
 		
 		case 'unlink':
-			//TODO completer l'appel pour délier une ligne à une release
-			
+			$release->unlink($linkid); // Et oui dans ce cas $linkid est défini en haut par GETPOST()
 			
 			_card($PDOdb, $propal);
 			break;
@@ -97,9 +97,6 @@ function _card(&$PDOdb, &$propal) {
 	llxHeader();
 	_entete($propal);
 	
-	// TODO finaliser l'affichage de la liste des releases
-	// HELP, il manque quelques points
-	
 	$TRelease = TRelease::getAllReleaseForPropal($PDOdb, $propal->id);
 	
 	$formCore = new TFormCore($_SERVER['PHP_SELF'], 'formRelease','post');
@@ -109,16 +106,20 @@ function _card(&$PDOdb, &$propal) {
 	
 	foreach($TRelease as &$release) {
 		
-		//TODO A internationaliser
 		echo '<br /><br /> 
-		<table class="border" width="100%"><tr class="liste_titre"><th>Label</th><th>Line</th><th>.</th></tr>';
+		<table class="border" width="100%"><tr class="liste_titre"><th>'.$langs->trans('Label').'</th>
+		<th>'.$langs->trans('Date').'</th>
+		<th>'.$langs->trans('Line').'</th><th>.</th></tr>'; // Et oui ce fichu champs date
 		
 		echo '<tr>
 			<td>'.$formCore->texte('','TRelease['.$release->getId().'][label]', $release->label,40,255).'</td>
+			<td>'.$formCore->calendrier('','TRelease['.$release->getId().'][date_release]', $release->date_release,10,10).'</td>
 			<td>'.$formCore->combo('','TRelease['.$release->getId().'][line_to_add]', TRelease::getAllLineCombo($propal), -1).' '.$formCore->btsubmit($langs->trans('AddLineRelease'), 'TRelease['.$release->getId().'][bt_add_line_release]').'</td>
 			<td>'.$formCore->btsubmit($langs->trans('FactureThisRelease'), 'TRelease['.$release->getId().'][bt_facture_release]').'</td>
-			<td><a href="?id='.$propal->id.'&atcion=delet">'.img_delete().'</a></td>
-		</tr>'; //TODO je crois que j'ai fait une erreur sur le lien de suppression
+			<td><a href="?id='.$propal->id.'&action=delete">'.img_delete().'</a></td>
+		</tr>';
+		
+		$total = 0;
 		
 		foreach($release->TReleaseLineLink as &$link) {
 			
@@ -126,12 +127,14 @@ function _card(&$PDOdb, &$propal) {
 			echo '<tr>
 				<td> *** </td>
 				<td>'.$link->getLineTitle().'</td>
+				<td>&nbsp;</td>
 				<td>'.$formCore->texte('','TRelease['.$release->getId().'][TReleaseLineLink]['.$link->getId().'][qty]', $link->qty,3,10).'</td>
-			<td><a href="?id='.$propal->id.'&atcion=unlink&lineid='.$link->fk_propal_line.'">'.img_delete().'</a></td>
+			<td><a href="?id='.$propal->id.'&action=unlink&lineid='.$link->fk_propal_line.'">'.img_delete().'</a></td>
 			</tr>';
+			
+			$total+=$link->qty * $link->amount;
 		}
 		
-		//TODO afficher le total du montant de la release
 		echo '<tr><td align="right" colspan="2">'.$langs->trans('Total').'</td><td align="right">'.price($total).'</td></tr>';
 		echo '</table>';	
 	}	
@@ -159,7 +162,6 @@ function _entete(&$object) {
 	$soc = new Societe($db);
 	$soc->fetch($object->socid);
 
-	dol_include_once('/core/lib/propal.lib.php'); //TODO placer cette inclusion à un endroit plus propice
 	$head = propal_prepare_head($object);
 	dol_fiche_head($head, 'release', $langs->trans('Proposal'), 0, 'propal');
 	

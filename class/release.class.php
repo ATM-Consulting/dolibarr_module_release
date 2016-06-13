@@ -6,11 +6,9 @@ class TRelease extends TObjetStd {
 		
 		$this->set_table(MAIN_DB_PREFIX . 'release');
 		$this->add_champs('fk_propal',array('type'=>'integer', 'index'=>true));
-		//TODO par rapport à la définition de besoin, ne manque-t-il pas un champs ?
-		//HELP Tu as lu le README ?
+		$this->add_champs('date_release',array('type'=>'date', 'index'=>true));
 		
-		
-		$this->_init_vars('label');
+		$this->_init_vars('label'); // et oui, le _init_vars initialise des variables de type varchar(255) par défaut. Mais le mettre au dessus n'enlevait pas de points
 		$this->start();
 		
 		// ratachement des points enfants
@@ -41,9 +39,12 @@ class TRelease extends TObjetStd {
 		$Tab = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX . 'release', array('fk_propal'=>$fk_propal));
 		$TRelease = array();
 		
-		//TODO rendre ça plus lisible
-		//HELP En plus ça ne marche pas, j'ai true dans le tableau
-		foreach($Tab as $id) $TRelease[] = (new TRelease)->load($PDOdb, $id); 
+		foreach($Tab as $id) {
+			 $release = new TRelease;
+			 $release->load($PDOdb, $id); 
+			 
+			 $TRelease[] = $release;
+		}
 		
 		return $TRelease;
 	}
@@ -62,7 +63,7 @@ class TReleaseLineLink extends TObjetStd {
 		$this->_init_vars();
 		$this->start();
 		
-		//TODO définir le champs quantité à 1 par défaut
+		$this->qty = 1;
 		$this->line = null;
 		
 	}
