@@ -20,6 +20,11 @@
 	if($id_release>0) {
 		$release->load($PDOdb, $id_release);
 	}
+
+	$hookmanager->initHooks(array('releasecard','globalcard'));
+	$parameters = array();
+	$reshook = $hookmanager->executeHooks('doActions', $parameters, $release, $action); // Note that $action and $object$
+	if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 	
 	switch ($action) {
 		case 'add':
@@ -140,6 +145,9 @@ function _card(&$PDOdb, &$propal) {
 	
 	
 	<div class="tabsAction">
+<?php
+// TODO ajouter l'appel d'un hook addMoreActionsButtons
+?>
 		<div class="inline-block divButAction"><a href="?id=<?php echo $propal->id?>&action=add" class="butAction"><?php echo $langs->trans('Add') ?></a></div>
 		<div class="inline-block divButAction"><input type="submit" name="bt_save" class="butAction" value="<?php echo $langs->trans('Save') ?>" /></div>
 	</div>
