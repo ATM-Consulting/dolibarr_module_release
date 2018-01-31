@@ -14,11 +14,9 @@
 	
 	$action = GETPOST('action');
 	
-	$PDOdb = new TPDOdb;
-	
-	$release = new TRelease;
+	$release = new Release($db);
 	if($id_release>0) {
-		$release->load($PDOdb, $id_release);
+		$release->fetch($id_release);
 	}
 
 	$hookmanager->initHooks(array('releasecard','globalcard'));
@@ -30,9 +28,9 @@
 		case 'add':
 			
 			$release->fk_propal = $id;
-			$release->save($PDOdb);
+			$release->create($user);
 			
-			_card($PDOdb, $propal);
+			_card( $propal);
 			break;
 		
 		case 'save':
@@ -43,15 +41,16 @@
 				
 				foreach($TRelease as $id_release=>$dataRelease) {
 					
-					if($release->load($PDOdb, $id_release)) {
+					$release = new Release($db);
+					if($release->fetch($id_release)) {
 						
-						$release->set_values($dataRelease);
+						$release->setValues($dataRelease);
 						
 						if(!empty($dataRelease['TReleaseLineLink'])) {
 							
 							foreach($dataRelease['TReleaseLineLink'] as $k=>$dataLink) {
 								
-								$release->TReleaseLineLink[$k]->set_values($dataLink);
+								$release->TReleaseLineLink[$k]->setValues($dataLink);
 								
 							}
 							
@@ -74,29 +73,29 @@
 				
 			}
 			
-			_card($PDOdb, $propal);
+			_card( $propal);
 			break;
 		
 		case 'delete':
-			$release->delete($PDOdb);
+			$release->delete($user);
 			
-			_card($PDOdb, $propal);
+			_card( $propal);
 			break;
 		
 		case 'unlink':
 			//TODO completer l'appel pour délier une ligne à une release
 			
 			
-			_card($PDOdb, $propal);
+			_card( $propal);
 			break;
 		
 		default:
-			_card($PDOdb, $propal);
+			_card( $propal);
 			
 			break;
 	}
 	
-function _card(&$PDOdb, &$propal) {
+function _card( &$propal) {
 	global $langs;
 	
 	llxHeader();
@@ -105,7 +104,7 @@ function _card(&$PDOdb, &$propal) {
 	// TODO finaliser l'affichage de la liste des releases
 	// HELP, il manque quelques points
 	
-	$TRelease = TRelease::getAllReleaseForPropal($PDOdb, $propal->id);
+	$TRelease = Release::getAllReleaseForPropal( $propal->id);
 	
 	$formCore = new TFormCore($_SERVER['PHP_SELF'], 'formRelease','post');
 	echo $formCore->hidden('action', 'save');
@@ -119,9 +118,9 @@ function _card(&$PDOdb, &$propal) {
 		<table class="border" width="100%"><tr class="liste_titre"><th>Label</th><th>Line</th><th>.</th></tr>';
 		
 		echo '<tr>
-			<td>'.$formCore->texte('','TRelease['.$release->getId().'][label]', $release->label,40,255).'</td>
-			<td>'.$formCore->combo('','TRelease['.$release->getId().'][line_to_add]', TRelease::getAllLineCombo($propal), -1).' '.$formCore->btsubmit($langs->trans('AddLineRelease'), 'TRelease['.$release->getId().'][bt_add_line_release]').'</td>
-			<td>'.$formCore->btsubmit($langs->trans('FactureThisRelease'), 'TRelease['.$release->getId().'][bt_facture_release]').'</td>
+			<td>'.$formCore->texte('','TRelease['.$release->id.'][label]', $release->label,40,255).'</td>
+			<td>'.$formCore->combo('','TRelease['.$release->id.'][line_to_add]', Release::getAllLineCombo($propal), -1).' '.$formCore->btsubmit($langs->trans('AddLineRelease'), 'TRelease['.$release->id.'][bt_add_line_release]').'</td>
+			<td>'.$formCore->btsubmit($langs->trans('FactureThisRelease'), 'TRelease['.$release->id.'][bt_facture_release]').'</td>
 			<td><a href="?id='.$propal->id.'&atcion=delet">'.img_delete().'</a></td>
 		</tr>'; //TODO je crois que j'ai fait une erreur sur le lien de suppression
 		
@@ -131,7 +130,7 @@ function _card(&$PDOdb, &$propal) {
 			echo '<tr>
 				<td> *** </td>
 				<td>'.$link->getLineTitle().'</td>
-				<td>'.$formCore->texte('','TRelease['.$release->getId().'][TReleaseLineLink]['.$link->getId().'][qty]', $link->qty,3,10).'</td>
+				<td>'.$formCore->texte('','TRelease['.$release->id.'][TReleaseLineLink]['.$link->id.'][qty]', $link->qty,3,10).'</td>
 			<td><a href="?id='.$propal->id.'&atcion=unlink&lineid='.$link->fk_propal_line.'">'.img_delete().'</a></td>
 			</tr>';
 		}

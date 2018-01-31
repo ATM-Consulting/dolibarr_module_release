@@ -11,15 +11,13 @@ if(!defined('INC_FROM_DOLIBARR')) {
 }
 
 
-
+global $db;
 
 dol_include_once('/release/class/release.class.php');
 
-$PDOdb=new TPDOdb;
+$o=new Release($db);
+$o->init_db_by_vars();
 
-$o=new TRelease;
-$o->init_db_by_vars($PDOdb);
-
-$o=new TReleaseLineLink;
-$o->init_db_by_vars($PDOdb);
+$o=new ReleaseLineLink($db);
+$o->init_db_by_vars();
 

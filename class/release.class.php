@@ -1,25 +1,33 @@
 <?php
 
-class TRelease extends TObjetStd {
+class Release extends SeedObject{
 	
-	function __construct() {
+	public $table_element = 'release';
+	
+	public $fk_element = 'fk_release';
+	
+	public $childtable = array('ReleaseLineLink');
+	
+	function __construct(&$db) {
 		
-		$this->set_table(MAIN_DB_PREFIX . 'release');
-		$this->add_champs('fk_propal',array('type'=>'integer', 'index'=>true));
+		$this->db = $db;
+		$this->table_element = 'release';
+		$this->fields=array(
+				'fk_propal'=>array('type'=>'integer','index'=>true)
+				,'label'=>array('type'=>'string')
+		);
+		
 		//TODO par rapport à la définition de besoin, ne manque-t-il pas un champs ?
 		//HELP Tu as lu le README ?
 		
+		$this->init();
 		
-		$this->_init_vars('label');
-		$this->start();
 		
-		// ratachement des points enfants
-		$this->setChild('TReleaseLineLink', 'fk_release');
 	}
 		
-	function link($PDOdb, $lineid) {
+	function link( $lineid) {
 		
-		$k = $this->addChild($PDOdb, 'TReleaseLineLink');
+		$k = $this->addChild('ReleaseLineLink');
 		$this->TReleaseLineLink[$k]->fk_propal_line = $lineid;
 		
 		return $k;
@@ -27,7 +35,7 @@ class TRelease extends TObjetStd {
 	}	
 	function unlink($linkid) {
 		
-		$this->removeChild('TReleaseLineLink', $linkid);
+		$this->removeChild('ReleaseLineLink', $linkid);
 	}
 
 	function facture() {
@@ -36,39 +44,50 @@ class TRelease extends TObjetStd {
 		
 	}
 	
-	static function getAllReleaseForPropal(&$PDOdb, $fk_propal) {
+	static function getAllReleaseForPropal($fk_propal) {
 		
-		$Tab = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX . 'release', array('fk_propal'=>$fk_propal));
+		global $db;
+
 		$TRelease = array();
+		
+		$resql = $db->query("SELECT rowid FROM ".MAIN_DB_PREFIX."release WHERE fk_propal=".$fk_propal);
 		
 		//TODO rendre ça plus lisible
 		//HELP En plus ça ne marche pas, j'ai true dans le tableau
-		foreach($Tab as $id) $TRelease[] = (new TRelease)->load($PDOdb, $id); 
+		
+		while($obj = $db->fetch_object($resql)) {
+			$TRelease[] = (new Release($db))->fetch($obj->rowid); 
+		}
 		
 		return $TRelease;
 	}
 }
 
 
-class TReleaseLineLink extends TObjetStd {
+class ReleaseLineLink extends SeedObject{
 	
-	function __construct() {
+	public $table_element = 'release_line_link';
+	
+	function __construct(&$db) {
 		
-		$this->set_table(MAIN_DB_PREFIX . 'release_line_link');
-		$this->add_champs('fk_release',array('type'=>'integer', 'index'=>true));
-		$this->add_champs('fk_propal_line',array('type'=>'integer'));
-		$this->add_champs('qty,amount',array('type'=>'float')); // en prévision de définir le nombre dans chaque rattachement à une release
+		$this->db = $db;
+		$this->table_element = 'release_line_link';
+		$this->fields=array(
+				'fk_release'=>array('type'=>'integer','index'=>true)
+				,'fk_propal_line'=>array('type'=>'integer')
+				,'qty'=>array('type'=>'float') // en prévision de définir le nombre dans chaque rattachement à une release
+				,'amount'=>array('type'=>'float')
+		);
 		
-		$this->_init_vars();
-		$this->start();
+		$this->init();
 		
 		//TODO définir le champs quantité à 1 par défaut
 		$this->line = null;
 		
 	}
 		
-	function load(&$PDOdb,$id) {
-		$res = parent::load($PDOdb, $id);
+	function fetch($id) {
+		$res = parent::fetch($id);
 		
 		if($this->fk_propal_line) {
 			global $db,$conf,$user,$langs;
